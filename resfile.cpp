@@ -2,11 +2,6 @@
 #include "QDebug"
 #include <QTextCodec>
 
-ResFile::~ResFile()
-{
-    //this->Stream.device()->close();
-}
-
 QMap<QString, QByteArray>& ResFile::bufferOfFiles()
 {
     if(!IsRead)
@@ -52,7 +47,7 @@ void ResFile::GetFiles(QDataStream &stream, QMap<QString, ResFileEntry>& entries
         throw "File isn't res-archive";
     stream.device()->seek(startPos + Header.TableOffset);
     QVector<ResFileHashTableEntry> fileTable;
-    char bufferNames[Header.NamesLenght];
+    QVector<char> bufferNames(Header.NamesLenght);
     
     ResFileHashTableEntry hashTable;
     for(uint i(0); i<Header.TableSize; i++)
@@ -61,9 +56,9 @@ void ResFile::GetFiles(QDataStream &stream, QMap<QString, ResFileEntry>& entries
         fileTable.append(hashTable);
     }
 
-    int res = stream.readRawData(bufferNames, Header.NamesLenght);
+    int res = stream.readRawData(bufferNames.data(), Header.NamesLenght);
     QTextCodec* codec = QTextCodec::codecForName("CP1251"); //m
-    QString names = codec->toUnicode(bufferNames);
+    QString names = codec->toUnicode(bufferNames.data());
 
     BuildFileTableDictonary(fileTable, startPos, BufferLength, names, entries);
     
@@ -73,9 +68,9 @@ void ResFile::GetBufferList(QMap<QString, ResFileEntry> &entries, QDataStream &s
 {
     foreach(auto entry, entries.values())
     {
-        char arr[entry.Size];
-        stream.writeRawData(arr, entry.Size);
-        QByteArray ba(arr, entry.Size);
+        QByteArray ba(entry.Size, 0);
+        stream.device()->seek(entry.Position);
+        stream.readRawData(ba.data(), entry.Size);
         BufferOfFiles.insert(entry.FileName, ba);
     }
 }

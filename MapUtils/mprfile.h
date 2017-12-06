@@ -81,6 +81,8 @@ private:
     int TextureSize;
     int TileSize;
 
+    void PrepareSector(SecFile sec, int secX, int secY);
+
     QVector<QVector<MprVertex>> LandVertices;
     QVector<QVector<MprVertex>> WaterVertices;
     QVector<QVector<MprTile>> LandTiles;
